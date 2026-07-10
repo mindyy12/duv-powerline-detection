@@ -1,0 +1,9 @@
+venv/
+runs/
+*.pt
+train/
+valid/
+test/
+output.jpg
+results_bus.jpg
+.claude/

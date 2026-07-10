@@ -1,0 +1,13 @@
+train: train/images
+val: valid/images
+test: test/images
+
+nc: 6
+names: ['Broken Cable', 'Broken Insulator', 'Cable', 'Insulators', 'Tower', 'Vegetation']
+
+roboflow:
+  workspace: power-transmission-line
+  project: 84-vlr8w
+  version: 3
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/power-transmission-line/84-vlr8w/dataset/3
