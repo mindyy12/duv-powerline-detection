@@ -1,7 +1,12 @@
+import os
 from ultralytics import YOLO
 
-model = YOLO("yolov8n.pt")
-result = model("https://ultralytics.com/images/bus.jpg")[0]
+model = YOLO("runs/detect/train-2/weights/best.pt")
+
+test_images_dir = "test/images"
+sample_image = os.path.join(test_images_dir, "su110kv_vo-45-_JPG.rf.8b556d3f993067fb73dc7420b8f7329e.jpg")
+
+result = model(sample_image)[0]
 result.save(filename="output.jpg")
 
 print(f"Detected {len(result.boxes)} objects:")

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>duv — Power Line Fault Inspector</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="shell">
+        <aside class="sidebar">
+            <div class="brand">
+                <div>
+                    <div class="brand-name">duv</div>
+                    <div class="brand-sub">YOLOv8xDUV V2</div>
+                </div>
+            </div>
+            <nav class="nav">
+                <a class="nav-item active" href="#">Dashboard</a>
+                <a class="nav-item" href="#">Detections <span class="nav-badge">{{ detections|length }}</span></a>
+                <a class="nav-item" href="#">History</a>
+                <a class="nav-item" href="#">Settings</a>
+            </nav>
+        </aside>
+
+        <div class="main">
+            <header class="topbar">
+                <div class="breadcrumb">
+                    <span>duv</span>
+                    <span class="sep">&rsaquo;</span>
+                    <span class="crumb-current">Test Frame {{ index + 1 }}</span>
+                    <span class="live-pill"><span class="live-dot"></span>LIVE</span>
+                </div>
+                <div class="topbar-actions">
+                    <button class="action-btn">Filter</button>
+                    <button class="action-btn active">Overlays</button>
+                    <button class="action-btn">Rescan</button>
+                    <button class="action-btn">Export</button>
+                </div>
+            </header>
+
+            <div class="content">
+                <section class="viewport">
+                    <div class="frame">
+                        <img src="{{ url_for('static', filename='frame.jpg') }}" alt="Detection frame">
+                        {% for d in detections %}
+                        <div class="box severity-{{ d.severity }}"
+                             style="left: {{ d.left }}%; top: {{ d.top }}%; width: {{ d.width }}%; height: {{ d.height }}%;">
+                            <span class="box-label">
+                                <span class="box-dot"></span>{{ d.id }} &middot; {{ d.class_name }} &middot; {{ "%.0f"|format(d.confidence * 100) }}%
+                            </span>
+                        </div>
+                        {% endfor %}
+                        <div class="frame-meta">{{ image_name }}</div>
+                    </div>
+                    <nav class="frame-nav">
+                        <a href="/?index={{ index - 1 }}">&larr; Previous</a>
+                        <span>Frame {{ index + 1 }} of {{ total }}</span>
+                        <a href="/?index={{ index + 1 }}">Next &rarr;</a>
+                    </nav>
+
+                    <div class="stat-row">
+                        <div class="stat-tile">
+                            <span class="stat-value">{{ detections|length }}</span>
+                            <span class="stat-label">Total Detections</span>
+                        </div>
+                        <div class="stat-tile stat-critical">
+                            <span class="stat-value">{{ severity_counts.critical }}</span>
+                            <span class="stat-label">Critical Faults</span>
+                        </div>
+                        <div class="stat-tile stat-warning">
+                            <span class="stat-value">{{ severity_counts.warning }}</span>
+                            <span class="stat-label">Warnings</span>
+                        </div>
+                        <div class="stat-tile">
+                            <span class="stat-value stat-text">{{ most_common_category }}</span>
+                            <span class="stat-label">Most Common</span>
+                        </div>
+                        <div class="stat-tile">
+                            <span class="stat-value stat-text">{{ last_scan }}</span>
+                            <span class="stat-label">Last Scan</span>
+                        </div>
+                        <div class="stat-tile">
+                            <span class="stat-value stat-text">{{ coordinates }}</span>
+                            <span class="stat-label">Coordinates</span>
+                        </div>
+                    </div>
+                </section>
+
+                <aside class="panel">
+                    {% set total = detections|length %}
+                    <div class="severity-breakdown">
+                        <h2>Severity Breakdown</h2>
+                        <div class="sev-badges">
+                            <div class="sev-badge">
+                                <span class="sev-badge-dot critical"></span>
+                                <span class="sev-badge-count">{{ severity_counts.critical }}</span>
+                                <span class="sev-badge-label">Critical</span>
+                            </div>
+                            <div class="sev-badge">
+                                <span class="sev-badge-dot warning"></span>
+                                <span class="sev-badge-count">{{ severity_counts.warning }}</span>
+                                <span class="sev-badge-label">Warning</span>
+                            </div>
+                            <div class="sev-badge">
+                                <span class="sev-badge-dot normal"></span>
+                                <span class="sev-badge-count">{{ severity_counts.normal }}</span>
+                                <span class="sev-badge-label">Normal</span>
+                            </div>
+                        </div>
+                        <div class="sev-progress-list">
+                            <div class="sev-progress-row">
+                                <span class="sev-progress-label critical">Critical</span>
+                                <div class="sev-progress-bar"><div class="sev-progress-fill critical" style="width: {{ (severity_counts.critical / total * 100) if total else 0 }}%;"></div></div>
+                                <span class="sev-progress-count">{{ severity_counts.critical }}/{{ total }}</span>
+                            </div>
+                            <div class="sev-progress-row">
+                                <span class="sev-progress-label warning">Warning</span>
+                                <div class="sev-progress-bar"><div class="sev-progress-fill warning" style="width: {{ (severity_counts.warning / total * 100) if total else 0 }}%;"></div></div>
+                                <span class="sev-progress-count">{{ severity_counts.warning }}/{{ total }}</span>
+                            </div>
+                            <div class="sev-progress-row">
+                                <span class="sev-progress-label normal">Normal</span>
+                                <div class="sev-progress-bar"><div class="sev-progress-fill normal" style="width: {{ (severity_counts.normal / total * 100) if total else 0 }}%;"></div></div>
+                                <span class="sev-progress-count">{{ severity_counts.normal }}/{{ total }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h2>Detected Faults &mdash; {{ detections|length }} found</h2>
+                    {% if detections %}
+                    <div class="fault-list">
+                        {% for d in detections %}
+                        <div class="fault-card severity-{{ d.severity }}">
+                            <div class="fault-head">
+                                <span class="fault-name">{{ d.class_name }}</span>
+                                <span class="sev-pill">{{ d.severity }}</span>
+                            </div>
+                            <div class="fault-sub">{{ d.id }} &middot; {{ d.category }}</div>
+                            <div class="conf-row">
+                                <div class="conf-bar"><div class="conf-fill" style="width: {{ "%.0f"|format(d.confidence * 100) }}%;"></div></div>
+                                <div class="conf-value">{{ "%.0f"|format(d.confidence * 100) }}%</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="empty-state">No faults on this frame.</p>
+                    {% endif %}
+                </aside>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
