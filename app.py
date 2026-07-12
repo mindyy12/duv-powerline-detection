@@ -1,9 +1,10 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for
 from ultralytics import YOLO
 from collections import Counter
 import datetime
 import os
 import shutil
+import requests
 
 app = Flask(__name__)
 model = YOLO("runs/detect/train-2/weights/best.pt")
@@ -29,7 +30,119 @@ CATEGORY = {
     "Vegetation": "Environmental",
 }
 
-FRAME_COORDINATES = "67.6767°N, 67.6767°E"
+BOM_BASE = "https://api.weather.bom.gov.au/v1"
+# UNSW Maccas
+BASE_LAT = -33.919548
+BASE_LONG = 151.227176
+
+# Generate synthetic coords for frames
+def generate_coordinates(frame_index):
+    lat = BASE_LAT + (frame_index * 0.0006)
+    lon = BASE_LONG + (frame_index * 0.0004)
+    return lat, lon
+
+# Format coordinates
+def format_coordinates(lat, lon):
+    lat_dir = "S" if lat < 0 else "N"
+    lon_dir = "E" if lon >= 0 else "W"
+    return f"{abs(lat):.4f}°{lat_dir}, {abs(lon):.4f}°{lon_dir}"
+
+# Retrieve BOM
+WEATHER_DEFAULT = {
+    "level": "unknown",
+    "warnings": [],
+    "warning_group_type": None,
+    "wind_speed": None,
+    "wind_direction": None,
+    "gust_speed": None,
+    "max_gust_speed": None,
+    "fire_danger": None,
+    "fire_danger_colour": None,
+}
+
+def get_weather_data(lat, lon):
+    headers = {"User-Agent": "Mozilla/5.0"}
+    try:
+        # searches location
+        search_resp = requests.get(
+            f"{BOM_BASE}/locations",
+            params={"search": f"{lat}, {lon}"},
+            headers=headers,
+            timeout=5,
+        )
+        search_resp.raise_for_status()
+        results = search_resp.json().get("data", [])
+        if not results:
+            return dict(WEATHER_DEFAULT)
+        
+        geohash = results[0]["geohash"][:6]
+
+        # gets climate warnings
+        warnings_resp = requests.get(
+            f"{BOM_BASE}/locations/{geohash}/warnings",
+            headers=headers,
+            timeout=5
+        )
+        warnings_resp.raise_for_status()
+        warnings_data = warnings_resp.json().get("data", [])
+
+        # gets wind conditions
+        observations_resp = requests.get(
+            f"{BOM_BASE}/locations/{geohash}/observations",
+            headers=headers,
+            timeout=5
+        )
+        observations_resp.raise_for_status()
+        obs = observations_resp.json().get("data", {})
+
+        # gets fire danger
+        daily_resp = requests.get(
+            f"{BOM_BASE}/locations/{geohash}/forecasts/daily",
+            headers=headers,
+            timeout=5
+        )
+        daily_resp.raise_for_status()
+        daily_data = daily_resp.json().get("data", [])
+        daily = daily_data[0] if daily_data else {}
+
+        # weather dictionary
+        weather = dict(WEATHER_DEFAULT)
+        weather["wind_speed"] = (obs.get("wind") or {}).get("speed_kilometre")
+        weather["wind_direction"] = (obs.get("wind") or {}).get("direction")
+        weather["gust_speed"] = (obs.get("gust") or {}).get("speed_kilometre")
+        weather["max_gust_speed"] = (obs.get("max_gust") or {}).get("speed_kilometre")
+        weather["fire_danger"] = daily.get("fire_danger")
+        weather["fire_danger_colour"] = (daily.get("fire_danger_category") or {}).get("dark_mode_colour")
+        if warnings_data:
+            first_warning = warnings_data[0]
+            weather["level"] = "high"
+            weather["warnings"] = [w.get("title", "Active warning") for w in warnings_data]
+            weather["warning_group_type"] = first_warning.get("warning_group_type")
+        else:
+            weather["level"] = "low"
+
+        return weather
+
+    except requests.RequestException:
+        return dict(WEATHER_DEFAULT)
+
+# Urgency classification
+def apply_storm_urgency(detections, storm_risk):
+    if storm_risk["level"] != "high":
+        return detections
+    bump = {"normal": "warning", "warning": "critical", "critical": "critical"}
+    for d in detections:
+        d["severity"] = bump[d["severity"]]
+    return detections
+
+DEFAULT_THEME = "editorial"
+THEMES = ["editorial", "telemetry", "daylight"]
+
+
+def current_theme():
+    theme = request.cookies.get("theme", DEFAULT_THEME)
+    return theme if theme in THEMES else DEFAULT_THEME
+
 
 @app.route("/")
 def index():
@@ -41,6 +154,7 @@ def index():
     result = model(image_path)[0]
 
     shutil.copy(image_path, "static/frame.jpg")
+    result.save(filename="static/export.jpg")
 
     img_height, img_width = result.orig_shape
 
@@ -62,6 +176,11 @@ def index():
             "height": (y2 - y1) / img_height * 100,
         })
     
+    lat, lon = generate_coordinates(frame_index)
+    coordinates = format_coordinates(lat, lon)
+    weather = get_weather_data(lat, lon)
+    detections = apply_storm_urgency(detections, weather)
+    
     severity_counts = {
         "critical": sum(1 for d in detections if d["severity"] == "critical"),
         "warning": sum(1 for d in detections if d["severity"] == "warning"),
@@ -73,7 +192,7 @@ def index():
     else:
         most_common_category = "-"
 
-    last_scan = datetime.datetime.now().strftime("%H:%M")
+    last_scan = datetime.datetime.now().strftime("%H:%M:%S")
 
     return render_template(
         "index.html",
@@ -81,11 +200,41 @@ def index():
         severity_counts=severity_counts,
         most_common_category=most_common_category,
         last_scan=last_scan,
-        coordinates=FRAME_COORDINATES,
+        coordinates=coordinates,
+        weather=weather,
         index=frame_index,
         total=len(test_images),
         image_name=image_name,
+        theme=current_theme(),
+        active_page="live",
     )
+
+
+@app.route("/predictive")
+def predictive():
+    return render_template(
+        "predictive.html",
+        theme=current_theme(),
+        active_page="predictive",
+    )
+
+
+@app.route("/settings", methods=["GET", "POST"])
+def settings():
+    if request.method == "POST":
+        theme = request.form.get("theme", DEFAULT_THEME)
+        if theme not in THEMES:
+            theme = DEFAULT_THEME
+        response = redirect(url_for("settings"))
+        response.set_cookie("theme", theme, max_age=60 * 60 * 24 * 365)
+        return response
+
+    return render_template(
+        "settings.html",
+        theme=current_theme(),
+        active_page="settings",
+    )
+
 
 if __name__ == "__main__":
     app.run(debug=True)

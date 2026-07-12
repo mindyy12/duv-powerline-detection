@@ -4,7 +4,8 @@ from ultralytics import YOLO
 model = YOLO("runs/detect/train-2/weights/best.pt")
 
 test_images_dir = "test/images"
-sample_image = os.path.join(test_images_dir, "su110kv_vo-45-_JPG.rf.8b556d3f993067fb73dc7420b8f7329e.jpg")
+# sample_image = os.path.join(test_images_dir, "su110kv_vo-45-_JPG.rf.8b556d3f993067fb73dc7420b8f7329e.jpg")
+sample_image = "my_images/Screenshot 2026-07-11 235810.png"
 
 result = model(sample_image)[0]
 result.save(filename="output.jpg")

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html data-theme="{{ theme }}">
+<head>
+    <title>{% block title %}duv — Power Line Fault Inspector{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="shell">
+        <aside class="sidebar">
+            <div class="brand">
+                <div>
+                    <div class="brand-name">duv</div>
+                    <div class="brand-sub">YOLOv8xDUV V2</div>
+                </div>
+            </div>
+            <nav class="nav">
+                <a class="nav-item {{ 'active' if active_page == 'live' }}" href="{{ url_for('index') }}">Live</a>
+                <a class="nav-item {{ 'active' if active_page == 'predictive' }}" href="{{ url_for('predictive') }}">Predictive</a>
+                <a class="nav-item {{ 'active' if active_page == 'settings' }}" href="{{ url_for('settings') }}">Settings</a>
+            </nav>
+        </aside>
+
+        <div class="main">
+            {% block main %}{% endblock %}
+        </div>
+    </div>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,5 +1,4 @@
 ## Phase 1
-
 ### Setup 27/6/26
 - Created virtual environment and installed ultralytics which contains YOLOv8 and PyTorch
 - Testing first detection
@@ -9,12 +8,20 @@
 - Found public data set to train model 
 - Trained 60 epochs and got mAP50 to 0.493 and mAP50-95 to 0.302
 ### Model Validation and Testing 10/7/26
-- Some of the images in Roboflows dataset are mosaic -> dataset limitation  
+- Some of the images in Roboflows dataset are mosaic -> dataset limitation 
+### Weather Data Layer 12/7/26
+- Set up call to BOM API using generated coordinates
 
 ## Phase 3 
 ### Connected to flask 11/7/26
 - Made app.py and .html for dashboard
 - Prototyped design on figma then took inspiration from web templates
+
+## To do 
+- LIVE: Climate coordinate risk 
+- Dahsbaord user input coords 
+- Create predictive system 
+
 
 ## Notes and Learning 
 - Epoch: one full pass through entire traning set. epochs=10 means model sees all images 10 times. 

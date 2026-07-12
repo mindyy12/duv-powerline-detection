@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}duv — Predictive{% endblock %}
+
+{% block main %}
+            <header class="topbar">
+                <div class="breadcrumb">
+                    <span>duv</span>
+                    <span class="sep">&rsaquo;</span>
+                    <span class="crumb-current">Predictive Risk</span>
+                </div>
+            </header>
+
+            <div class="content">
+                <section class="viewport">
+                    <div class="placeholder-panel">
+                        <h2>Network Climate Risk Index</h2>
+                        <p>
+                            This tab will show a composite risk score per location, combining vegetation
+                            trend, synthetic outage history anchored to real BOM severe weather dates for
+                            NSW, and live storm proximity &mdash; as a transparent, explainable weighted
+                            score rather than a black-box model.
+                        </p>
+                        <p class="placeholder-status">Coming soon</p>
+                    </div>
+                </section>
+            </div>
+{% endblock %}

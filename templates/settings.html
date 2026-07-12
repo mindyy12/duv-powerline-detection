@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}duv — Settings{% endblock %}
+
+{% block main %}
+            <header class="topbar">
+                <div class="breadcrumb">
+                    <span>duv</span>
+                    <span class="sep">&rsaquo;</span>
+                    <span class="crumb-current">Settings</span>
+                </div>
+            </header>
+
+            <div class="content">
+                <section class="viewport">
+                    <div class="placeholder-panel">
+                        <h2>Colour theme</h2>
+                        <p>Choose how the dashboard looks. Applies everywhere, right away.</p>
+
+                        <form method="post" class="theme-form">
+                            <div class="theme-options">
+                                <label class="theme-option {{ 'selected' if theme == 'editorial' }}">
+                                    <input type="radio" name="theme" value="editorial" {{ 'checked' if theme == 'editorial' }}>
+                                    <span class="theme-swatch theme-swatch-editorial">
+                                        <span class="swatch-dot" style="background:#7c9473;"></span>
+                                        <span class="swatch-dot" style="background:#d8974f;"></span>
+                                        <span class="swatch-dot" style="background:#b6583c;"></span>
+                                    </span>
+                                    <span class="theme-name">Editorial</span>
+                                    <span class="theme-desc">Warm cream &amp; sage, serif display</span>
+                                </label>
+
+                                <label class="theme-option {{ 'selected' if theme == 'telemetry' }}">
+                                    <input type="radio" name="theme" value="telemetry" {{ 'checked' if theme == 'telemetry' }}>
+                                    <span class="theme-swatch theme-swatch-telemetry">
+                                        <span class="swatch-dot" style="background:#4f8cff;"></span>
+                                        <span class="swatch-dot" style="background:#d9a441;"></span>
+                                        <span class="swatch-dot" style="background:#f04141;"></span>
+                                    </span>
+                                    <span class="theme-name">Telemetry</span>
+                                    <span class="theme-desc">Cool navy HUD, monospace display</span>
+                                </label>
+
+                                <label class="theme-option {{ 'selected' if theme == 'daylight' }}">
+                                    <input type="radio" name="theme" value="daylight" {{ 'checked' if theme == 'daylight' }}>
+                                    <span class="theme-swatch theme-swatch-daylight">
+                                        <span class="swatch-dot" style="background:#5f7a52;"></span>
+                                        <span class="swatch-dot" style="background:#b8792f;"></span>
+                                        <span class="swatch-dot" style="background:#a8402a;"></span>
+                                    </span>
+                                    <span class="theme-name">Daylight</span>
+                                    <span class="theme-desc">High-contrast light, field-friendly</span>
+                                </label>
+                            </div>
+
+                            <button type="submit" class="action-btn active theme-save">Save</button>
+                        </form>
+                    </div>
+                </section>
+            </div>
+{% endblock %}
