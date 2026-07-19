@@ -1,21 +1,13 @@
 {% extends "base.html" %}
 
-{% block main %}
-            <header class="topbar">
-                <div class="breadcrumb">
+{% block breadcrumb %}
                     <span>duv</span>
                     <span class="sep">&rsaquo;</span>
                     <span class="crumb-current">Test Frame {{ index + 1 }}</span>
                     <span class="live-pill"><span class="live-dot"></span>LIVE</span>
-                </div>
-                <div class="topbar-actions">
-                    <button class="action-btn">Filter</button>
-                    <button class="action-btn active" id="overlaysBtn" type="button">Overlays</button>
-                    <a class="action-btn" href="/?index={{ index }}">Rescan</a>
-                    <a class="action-btn" href="{{ url_for('static', filename='export.jpg') }}" download="{{ image_name }}">Export</a>
-                </div>
-            </header>
+{% endblock %}
 
+{% block main %}
             <div class="content">
                 <section class="viewport">
                     <div class="frame-header">
@@ -111,35 +103,7 @@
                         </div>
                     </div>
 
-                    <div class="weather-detail">
-                        <h2>Weather Conditions</h2>
-                        {% if weather.warnings %}
-                        <div class="weather-warning">
-                            <span class="warning-badge">{{ weather.warning_group_type|capitalize if weather.warning_group_type else 'Active' }}</span>
-                            {{ weather.warnings[0] }}
-                        </div>
-                        {% endif %}
-                        <div class="weather-metrics">
-                            <div class="weather-metric">
-                                <span class="weather-metric-label">Wind</span>
-                                <span class="weather-metric-value">{{ weather.wind_speed if weather.wind_speed is not none else '—' }} km/h {{ weather.wind_direction or '' }}</span>
-                            </div>
-                            <div class="weather-metric">
-                                <span class="weather-metric-label">Gust</span>
-                                <span class="weather-metric-value">{{ weather.gust_speed if weather.gust_speed is not none else '—' }} km/h</span>
-                            </div>
-                            <div class="weather-metric">
-                                <span class="weather-metric-label">Max Gust Today</span>
-                                <span class="weather-metric-value">{{ weather.max_gust_speed if weather.max_gust_speed is not none else '—' }} km/h</span>
-                            </div>
-                            <div class="weather-metric">
-                                <span class="weather-metric-label">Fire Danger</span>
-                                <span class="weather-metric-value" style="color: {{ weather.fire_danger_colour or 'inherit' }};">{{ weather.fire_danger or '—' }}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <h2>Detected Faults &mdash; {{ detections|length }} found</h2>
+                    <h2>Detected Objects &mdash; {{ detections|length }} found</h2>
                     {% if detections %}
                     <div class="fault-list">
                         {% for d in detections %}

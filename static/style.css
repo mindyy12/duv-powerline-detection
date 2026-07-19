@@ -100,11 +100,32 @@ body {
 
 /* Sidebar */
 .sidebar {
-    width: 230px;
+    width: 260px;
     flex-shrink: 0;
+    height: 100vh;
+    overflow-y: auto;
     background: var(--panel-alt);
     border-right: 1px solid var(--border);
     padding: 2rem 1.25rem;
+}
+
+.sidebar-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 1.75rem;
+    padding-bottom: 1.75rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.sidebar-actions .action-btn {
+    width: 100%;
+    text-align: center;
+}
+
+.top-nav {
+    display: flex;
+    gap: 6px;
 }
 
 .brand {

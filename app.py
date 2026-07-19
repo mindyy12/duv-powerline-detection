@@ -15,9 +15,9 @@ test_images = sorted(os.listdir(test_images_dir))
 SEVERITY = {
     "Broken Cable": "critical",
     "Broken Insulator": "critical",
-    "Cable": "warning",
+    "Cable": "normal",
     "Insulators": "normal",
-    "Tower": "warning",
+    "Tower": "normal",
     "Vegetation": "warning",
 }
 
@@ -192,7 +192,7 @@ def index():
     else:
         most_common_category = "-"
 
-    last_scan = datetime.datetime.now().strftime("%H:%M:%S")
+    last_scan = datetime.datetime.now().strftime("%A %d %B %Y %H:%M:%S")
 
     return render_template(
         "index.html",
