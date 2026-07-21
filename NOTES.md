@@ -17,6 +17,10 @@
 - Made app.py and .html for dashboard
 - Prototyped design on figma then took inspiration from web templates
 
+## Phase 4
+### Predictive layer 
+- Added BOM severe weather days to heatmap
+
 ## To do 
 - LIVE: Climate coordinate risk 
 - Dahsbaord user input coords 

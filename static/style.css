@@ -308,6 +308,46 @@ body {
     overflow: hidden;
 }
 
+.content-single {
+    grid-template-columns: 1fr;
+}
+
+.map-section {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+}
+
+.map-header {
+    flex-shrink: 0;
+    margin-bottom: 1rem;
+}
+
+.map-header h2 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 22px;
+    margin: 0 0 0.5rem;
+    color: var(--cream);
+}
+
+.map-caption {
+    color: var(--cream-dim);
+    font-size: 13px;
+    line-height: 1.5;
+    max-width: 720px;
+    margin: 0;
+}
+
+#riskMap {
+    flex: 1;
+    min-height: 0;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+}
+
 .viewport {
     min-width: 0;
     height: 100%;

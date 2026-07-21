@@ -9,18 +9,68 @@
 {% endblock %}
 
 {% block main %}
-            <div class="content">
-                <section class="viewport">
-                    <div class="placeholder-panel">
-                        <h2>Network Climate Risk Index</h2>
-                        <p>
-                            This tab will show a composite risk score per location, combining vegetation
-                            trend, synthetic outage history anchored to real BOM severe weather dates for
-                            NSW, and live storm proximity &mdash; as a transparent, explainable weighted
-                            score rather than a black-box model.
+            <div class="content content-single">
+                <section class="map-section">
+                    <div class="map-header">
+                        <h2>NSW Severe Wind Risk — Historical Density</h2>
+                        <p class="map-caption">
+                            {{ wind_events|length }} real severe wind gust events recorded across NSW
+                            (2010&ndash;2019), binned into a fixed 0.25&deg; grid and coloured by event
+                            count per cell &mdash; not a smoothed heatmap, so the colour you see doesn't
+                            change as you zoom. Source: BOM severe weather archive.
                         </p>
-                        <p class="placeholder-status">Coming soon</p>
                     </div>
+                    <div id="riskMap"></div>
                 </section>
             </div>
+{% endblock %}
+
+{% block scripts %}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        const windEvents = {{ wind_events|tojson }};
+        const windGrid = {{ wind_grid|tojson }};
+
+        const LEVEL_COLOURS = {
+            low: "#7c9473",
+            medium: "#d9a441",
+            high: "#b6583c",
+        };
+
+        const map = L.map("riskMap").setView([-32.5, 149.5], 6);
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: "&copy; OpenStreetMap contributors",
+            maxZoom: 18,
+        }).addTo(map);
+
+        windGrid.forEach((cell) => {
+            L.rectangle(
+                [
+                    [cell.lat_min, cell.lon_min],
+                    [cell.lat_max, cell.lon_max],
+                ],
+                {
+                    color: LEVEL_COLOURS[cell.level],
+                    weight: 1,
+                    fillColor: LEVEL_COLOURS[cell.level],
+                    fillOpacity: 0.45,
+                }
+            )
+                .bindPopup(`<b>${cell.count} event${cell.count === 1 ? "" : "s"}</b><br>${cell.level} density`)
+                .addTo(map);
+        });
+
+        windEvents.forEach((e) => {
+            L.circleMarker([e.lat, e.lon], {
+                radius: 2,
+                color: "#f3efe2",
+                opacity: 0.5,
+            })
+                .bindPopup(`<b>${e.town}</b><br>${e.date}<br>${Math.round(e.gust_kmh)} km/h gust`)
+                .addTo(map);
+        });
+    </script>
 {% endblock %}

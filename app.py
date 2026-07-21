@@ -5,6 +5,7 @@ import datetime
 import os
 import shutil
 import requests
+import csv
 
 app = Flask(__name__)
 model = YOLO("runs/detect/train-2/weights/best.pt")
@@ -126,6 +127,69 @@ def get_weather_data(lat, lon):
     except requests.RequestException:
         return dict(WEATHER_DEFAULT)
 
+# retrieve wind data
+def load_wind_events(path="wind.csv"):
+    events = []
+    with open(path, newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            try:
+                lat = float(row["Latitude"])
+                lon = float(row["Longitude"])
+                gust_knots = float(row["Max Gust speed"])
+            except (ValueError, KeyError):
+                continue
+            
+            if lat == 0 and lon == 0:
+                continue
+            
+            if gust_knots > 150:
+                continue
+
+            if gust_knots == 0:
+                gust_knots = 40
+            
+            events.append({
+                "lat": lat,
+                "lon": lon,
+                "gust_kmh": gust_knots * 1.852,
+                "date": row["Date/Time"],
+                "town": row["Nearest town"],
+            })
+
+    return events
+
+
+# discretise events into a fixed grid, coloured by event count (not zoom-dependent)
+def build_wind_density_grid(events, cell_size=0.25):
+    import math
+    from collections import defaultdict
+
+    counts = defaultdict(int)
+    for e in events:
+        key = (math.floor(e["lat"] / cell_size), math.floor(e["lon"] / cell_size))
+        counts[key] += 1
+
+    cells = []
+    for (lat_idx, lon_idx), count in counts.items():
+        if count >= 6:
+            level = "high"
+        elif count >= 3:
+            level = "medium"
+        else:
+            level = "low"
+
+        cells.append({
+            "lat_min": lat_idx * cell_size,
+            "lat_max": (lat_idx + 1) * cell_size,
+            "lon_min": lon_idx * cell_size,
+            "lon_max": (lon_idx + 1) * cell_size,
+            "count": count,
+            "level": level,
+        })
+
+    return cells
+
 # Urgency classification
 def apply_storm_urgency(detections, storm_risk):
     if storm_risk["level"] != "high":
@@ -212,10 +276,14 @@ def index():
 
 @app.route("/predictive")
 def predictive():
+    wind_events = load_wind_events()
+    wind_grid = build_wind_density_grid(wind_events)
     return render_template(
         "predictive.html",
         theme=current_theme(),
         active_page="predictive",
+        wind_events=wind_events,
+        wind_grid=wind_grid,
     )
 
 
